@@ -4,11 +4,11 @@
 
 - Las dos estan en la misma red.
 
-``Windows tiene esto.``
+``Windows tiene esta IP.``
 
 ![text](./win_ip.PNG)
 
-``Kali tiene esto.``
+``Kali tiene esta IP.``
 
 ![text](./kali_ip.PNG)
 
@@ -18,11 +18,13 @@ Tenemos que desactivarlo usando este commando de PowerShell:
 
 <pre>Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False</pre>
 
+`Estamos desactivando el firewall a todos los niveles publico, privado y dominio`
+
 O tambien navegando hasta Windows Security por la GUI.
 
-- Ahora que se pueden comunicar entre ellos con PING, lo siguiente es escanear los puertos abiertos que tiene Windows desde Kali. Para esto usamos el siguiente commando:
+Ahora que se pueden comunicar entre ellos con PING, lo siguiente es escanear los puertos abiertos que tiene Windows desde Kali. Para esto usamos el siguiente commando:
 
-Si el FireWall de Windows tiene el puerto 22 cerrado deberemos de abrirlo.
+Si el FireWall de Windows tiene el puerto 22 cerrado deberemos de abrirlo.(con fines de seguir el ejercicio, pero claramente no encontraremos asi de facil abierto el puerto 22)
 
 <pre>New-NetFirewallRule -DisplayName 'SSh' -Profile 'Private,Public,Domain' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 22
 </pre>
@@ -35,23 +37,23 @@ En Kali ejecutamos este commando para ver que puertos podemos exploatar.
 
 - Podemos ver que Windows en verdad tiene el puerto 22 abierto.
 
-Usando nmap podemos encontrar el usuario y password usando este commando:
+Si no disponemos de credenciales podemos usar nmap para encontrar el usuario y password usando este commando:
 
 <pre>nmap 192.168.56.101 -p 22 --script ssh-brute</pre>
 
-Esto tardará mucho si la contraseña es fuerte.
+Esto tardará mucho si la contraseña es fuerte ya que usa la base de datos interna de nmap para hacer el match con diferentes contraseñas y usuarios.
 
 ![text](nmap_1.PNG)
 
-Pero podemos usar una lista de usuarios y contraseñas si sabemos algo mas sobre el usuario, eg(cumpleaños, nombre, coche, hobbies etc)
+``Pero podemos usar una lista de usuarios y contraseñas`` si sabemos algo más sobre el usuario, ej.(cumpleaños, nombre, coche, hobbies, personalidad etc)
 
 <pre>nmap 192.168.56.101 -p 22 --script ssh-brute --script-args userdb=user.txt,passdb=psw.txt</pre>
 
-Aqui podemos ver que ha encontrado un match!(de antemano ya sabia la contraseña)
+Aqui podemos ver que ha encontrado un match!(``de antemano ya sabia la contraseña``)
 
 ![text](./nmap_2.PNG)
 
-Ahora que sabemos las credenciales podemos entrar por RDP usando Remmina.
+Ahora que sabemos las credenciales podemos entrar por RDP usando ``Remmina``.
 (quizas el pc windows tiene Remote Desktop quitado, en este caso por seguir con la practica usamos estos commandos en el pc Windows para activarlo)
 
 <pre>reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
@@ -107,10 +109,12 @@ Hagan la prueba:
 ![text](./test.PNG)
 
 Adicionalmente podemos usar programas para cambiar/restaurar/romper contraseñas:
-- ``John the Ripper`` es una de ellas
-- ``chntpw`` es otra (usaremos esta)
+- ``John the Ripper`` 
+- ``hashcat`` 
+- ``nmap``
+- ``chntpw`` (usaremos esta)
 
-## Hay que descargar esta herramienta: 
+## Hay que descargar la herramienta chntpw: 
 
 http://pogostick.net/~pnh/ntpasswd/cd140201.zip
 
@@ -131,3 +135,5 @@ despues de limpiar la contraseña se podrá iniciar sesion sin problema y se pue
 - Obviamente tambien si se logra entrar por ssh se puede usar este commando en PowerShell para generar una nueva password para el user que queremos:
 
 <pre>Set-ADAccountPassword -Identity $user -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "$newPass" -Force)</pre>
+
+### Como conclusión es importante mantener todos los puertos que no sean necesarios cerrados y crear contraseñas muy solidas. En el caso de tener que tener puertos abiertos para usar RDP, SSH, WinRM despues de hacer nuestro trabajo es crucial cerrar dichos puertos y parar los servicios. 
